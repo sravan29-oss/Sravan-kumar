@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  
+  html {
+    scroll-behavior: smooth;
+    background-color: #030304;
+    color: #f3f4f6;
+  }
+
+  body {
+    background-color: #030304;
+    overflow-x: hidden;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Custom Red Futuristic Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #070709;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #2b0b14;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 30, 56, 0.25);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #ff1e38;
+    box-shadow: 0 0 10px rgba(255, 30, 56, 0.8);
+  }
+}
+
+@layer utilities {
+  .text-glow {
+    text-shadow: 0 0 12px rgba(255, 30, 56, 0.6), 0 0 24px rgba(255, 30, 56, 0.3);
+  }
+  
+  .text-glow-white {
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  }
+
+  .border-glow {
+    border-color: rgba(255, 30, 56, 0.4);
+    box-shadow: 0 0 15px rgba(255, 30, 56, 0.25);
+  }
+
+  .glass-card {
+    background: rgba(14, 15, 20, 0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+  }
+
+  .glass-card-hover {
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .glass-card-hover:hover {
+    background: rgba(20, 18, 25, 0.8);
+    border-color: rgba(255, 30, 56, 0.45);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6), 0 0 25px rgba(255, 30, 56, 0.25);
+  }
+
+  .hud-bracket-tl {
+    position: relative;
+  }
+  .hud-bracket-tl::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    width: 8px;
+    height: 8px;
+    border-top: 2px solid #ff1e38;
+    border-left: 2px solid #ff1e38;
+  }
+
+  .hud-bracket-br {
+    position: relative;
+  }
+  .hud-bracket-br::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    border-bottom: 2px solid #ff1e38;
+    border-right: 2px solid #ff1e38;
+  }
+}
+
+/* Background Cyber Grid */
+.bg-grid-pattern {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 30, 56, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 30, 56, 0.04) 1px, transparent 1px);
+}
+
+.bg-dot-pattern {
+  background-image: radial-gradient(rgba(255, 30, 56, 0.15) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
