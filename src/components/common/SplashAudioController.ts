@@ -18,9 +18,14 @@ class SplashAudioController {
     if (this.initialized && this.audio) return;
 
     try {
-      // 1. Create native HTMLAudioElement with preloading
-      this.audio = new Audio();
-      this.audio.src = '/audio/cinematic-intro.mp3';
+      // 1. Attach to existing HTML5 audio element or create native audio
+      const existing = typeof document !== 'undefined' ? (document.getElementById('splash-cinematic-audio') as HTMLAudioElement) : null;
+      if (existing) {
+        this.audio = existing;
+      } else {
+        this.audio = new Audio('/audio/cinematic-intro.mp3');
+      }
+
       this.audio.preload = 'auto';
       this.audio.volume = this.targetVolume;
       this.audio.muted = this.isMuted;
@@ -58,12 +63,13 @@ class SplashAudioController {
     }
   }
 
-  public startWithAutoplayFallback(): Promise<boolean> {
+  public playDirect(): Promise<boolean> {
     this.init();
     if (!this.audio) return Promise.resolve(false);
 
-    // 1. First attempt unmuted playback
+    // Attempt direct unmuted playback
     this.audio.muted = false;
+    this.isMuted = false;
     this.audio.volume = this.targetVolume;
 
     const promise = this.audio.play();
@@ -76,25 +82,17 @@ class SplashAudioController {
           console.log('[SplashAudioController] Autoplay with sound active.');
           return true;
         })
-        .catch((_err) => {
-          // 2. Browser policy blocked unmuted sound on page load/refresh.
-          // Start playing muted immediately so audio time stays in exact 1:1 sync with the 3D visual timeline.
-          console.info('[SplashAudioController] Browser policy blocked unmuted autoplay. Running muted in sync until first user gesture.');
-          if (this.audio) {
-            this.audio.muted = true;
-            this.isMuted = true;
-            return this.audio.play()
-              .then(() => {
-                this.isPlaying = true;
-                return false; // playing, but muted pending user activation
-              })
-              .catch(() => false);
-          }
+        .catch((err) => {
+          console.info('[SplashAudioController] Browser autoplay policy holds unmuted audio until user touch/gesture:', err.message);
           return false;
         });
     }
 
     return Promise.resolve(false);
+  }
+
+  public startWithAutoplayFallback(): Promise<boolean> {
+    return this.playDirect();
   }
 
   public unmute(): boolean {
@@ -103,9 +101,11 @@ class SplashAudioController {
     this.isMuted = false;
     this.audio.volume = this.targetVolume;
 
-    const promise = this.audio.play();
-    if (promise !== undefined) {
-      promise.catch(() => {});
+    if (this.audio.paused) {
+      const promise = this.audio.play();
+      if (promise !== undefined) {
+        promise.catch(() => {});
+      }
     }
 
     this.isPlaying = true;

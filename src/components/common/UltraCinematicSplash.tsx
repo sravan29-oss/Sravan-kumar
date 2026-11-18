@@ -27,10 +27,11 @@ export const UltraCinematicSplash: React.FC<UltraCinematicSplashProps> = ({ onCo
       }
     };
 
+    window.addEventListener('touchstart', handleAmbientMovement, { passive: true, once: true });
+    window.addEventListener('touchend', handleAmbientMovement, { passive: true, once: true });
     window.addEventListener('pointerdown', handleAmbientMovement, { passive: true, once: true });
     window.addEventListener('pointermove', handleAmbientMovement, { passive: true, once: true });
     window.addEventListener('click', handleAmbientMovement, { passive: true, once: true });
-    window.addEventListener('touchstart', handleAmbientMovement, { passive: true, once: true });
     window.addEventListener('keydown', handleAmbientMovement, { passive: true, once: true });
     window.addEventListener('scroll', handleAmbientMovement, { passive: true, once: true });
 
