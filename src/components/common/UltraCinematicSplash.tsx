@@ -11,36 +11,28 @@ interface UltraCinematicSplashProps {
 export const UltraCinematicSplash: React.FC<UltraCinematicSplashProps> = ({ onComplete }) => {
   const [elapsed, setElapsed] = useState(0); // 0 to 12 seconds
   const [audioEnabled, setAudioEnabled] = useState(true);
-  const [isMutedByBrowser, setIsMutedByBrowser] = useState(false);
   const intervalRef = useRef<number | null>(null);
 
-  // AUTOMATIC SPLASH SEQUENCE — IMMEDIATE START ON OPEN WITHOUT BUTTONS
+  // AUTOMATIC SPLASH SEQUENCE — IMMEDIATE START & DIRECT MUSIC PLAYBACK
   useEffect(() => {
-    // 1. Initialize and attempt immediate playback
+    // 1. Play soundtrack directly
     splashAudio.init();
     splashAudio.setVolume(0.75);
-    splashAudio.startWithAutoplayFallback().then((startedUnmuted) => {
-      if (!startedUnmuted) {
-        // Browser autoplay policy held unmuted sound: it's running muted in sync
-        setIsMutedByBrowser(true);
-      } else {
-        setIsMutedByBrowser(false);
-      }
-    });
+    splashAudio.startWithAutoplayFallback();
 
-    // 2. Unlock sound on ANY ambient user interaction (pointerdown, click, touch, key)
-    const handleAmbientInteraction = () => {
+    // 2. Silent ambient listener for any natural user movement
+    const handleAmbientMovement = () => {
       if (splashAudio.isMutedState() || !splashAudio.getIsPlaying()) {
         splashAudio.unmute();
-        setIsMutedByBrowser(false);
-        setAudioEnabled(true);
       }
     };
 
-    window.addEventListener('pointerdown', handleAmbientInteraction, { passive: true });
-    window.addEventListener('click', handleAmbientInteraction, { passive: true });
-    window.addEventListener('touchstart', handleAmbientInteraction, { passive: true });
-    window.addEventListener('keydown', handleAmbientInteraction, { passive: true });
+    window.addEventListener('pointerdown', handleAmbientMovement, { passive: true, once: true });
+    window.addEventListener('pointermove', handleAmbientMovement, { passive: true, once: true });
+    window.addEventListener('click', handleAmbientMovement, { passive: true, once: true });
+    window.addEventListener('touchstart', handleAmbientMovement, { passive: true, once: true });
+    window.addEventListener('keydown', handleAmbientMovement, { passive: true, once: true });
+    window.addEventListener('scroll', handleAmbientMovement, { passive: true, once: true });
 
     // 3. High-precision synchronized cinematic timeline
     const startTime = performance.now();
@@ -66,10 +58,12 @@ export const UltraCinematicSplash: React.FC<UltraCinematicSplashProps> = ({ onCo
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
       splashAudio.stop();
-      window.removeEventListener('pointerdown', handleAmbientInteraction);
-      window.removeEventListener('click', handleAmbientInteraction);
-      window.removeEventListener('touchstart', handleAmbientInteraction);
-      window.removeEventListener('keydown', handleAmbientInteraction);
+      window.removeEventListener('pointerdown', handleAmbientMovement);
+      window.removeEventListener('pointermove', handleAmbientMovement);
+      window.removeEventListener('click', handleAmbientMovement);
+      window.removeEventListener('touchstart', handleAmbientMovement);
+      window.removeEventListener('keydown', handleAmbientMovement);
+      window.removeEventListener('scroll', handleAmbientMovement);
     };
   }, [audioEnabled, onComplete]);
 
@@ -77,7 +71,6 @@ export const UltraCinematicSplash: React.FC<UltraCinematicSplashProps> = ({ onCo
     e.stopPropagation();
     const isNowUnmuted = splashAudio.toggleMute();
     setAudioEnabled(isNowUnmuted);
-    setIsMutedByBrowser(!isNowUnmuted);
   };
 
   const handleSkip = (e: React.MouseEvent) => {
@@ -87,19 +80,8 @@ export const UltraCinematicSplash: React.FC<UltraCinematicSplashProps> = ({ onCo
     onComplete();
   };
 
-  const handleContainerClick = () => {
-    if (splashAudio.isMutedState() || !splashAudio.getIsPlaying()) {
-      splashAudio.unmute();
-      setIsMutedByBrowser(false);
-      setAudioEnabled(true);
-    }
-  };
-
   return (
-    <div
-      onClick={handleContainerClick}
-      className="fixed inset-0 z-50 bg-[#020204] flex items-center justify-center overflow-hidden select-none cursor-pointer"
-    >
+    <div className="fixed inset-0 z-50 bg-[#020204] flex items-center justify-center overflow-hidden select-none">
       {/* Top Floating Controls: Music Toggle & Instant Skip */}
       <div className="absolute top-6 right-6 z-50 flex items-center gap-3">
         <button
@@ -295,29 +277,12 @@ export const UltraCinematicSplash: React.FC<UltraCinematicSplashProps> = ({ onCo
         )}
       </div>
 
-      {/* Dynamic Ambient Audio Status / Interactive Unmute Pill */}
-      <div className="absolute bottom-6 inset-x-0 z-40 flex justify-center">
-        {isMutedByBrowser ? (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.9, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleContainerClick();
-            }}
-            className="pointer-events-auto flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-gradient-to-r from-[#ff1e38] to-[#990011] border border-white/20 text-white font-mono text-xs sm:text-sm font-bold tracking-wider uppercase shadow-[0_0_30px_rgba(255,30,56,0.7)] animate-pulse cursor-pointer backdrop-blur-md"
-          >
-            <Volume2 className="w-4 h-4 text-white animate-bounce" />
-            <span>CLICK ANYWHERE TO UNMUTE SOUND 🔊</span>
-          </motion.button>
-        ) : (
-          <div className="pointer-events-none flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0a0507]/85 border border-[#ff1e38]/30 backdrop-blur-md text-[11px] font-mono text-neutral-300 shadow-[0_0_15px_rgba(255,30,56,0.2)]">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#ff1e38] animate-ping" />
-            <span>INDIAN BLOCKBUSTER SOUNDTRACK &bull; PLAYING</span>
-          </div>
-        )}
+      {/* Ambient Soundtrack Badge */}
+      <div className="absolute bottom-6 inset-x-0 z-40 flex justify-center pointer-events-none">
+        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0a0507]/85 border border-[#ff1e38]/30 backdrop-blur-md text-[11px] font-mono text-neutral-300 shadow-[0_0_15px_rgba(255,30,56,0.2)]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#ff1e38] animate-ping" />
+          <span>INDIAN BLOCKBUSTER SOUNDTRACK &bull; PLAYING</span>
+        </div>
       </div>
     </div>
   );
